@@ -96,6 +96,9 @@ export default function Home() {
   const [backgroundClass, setBackgroundClass] = useState(
     "bg-gradient-to-br from-gray-900 to-black"
   );
+  const [cardClass, setCardClass] = useState(
+    "bg-gray-800/80 border-gray-700/50"
+  );
 
   // Set background based on time and weather
   useEffect(() => {
@@ -105,38 +108,49 @@ export default function Home() {
     const weatherCondition = weather.current?.condition.text.toLowerCase();
 
     let newBackground = "";
+    let newCardClass = "";
+
     if (isDay) {
       if (
         weatherCondition?.includes("sunny") ||
         weatherCondition?.includes("clear")
       ) {
         newBackground = "bg-gradient-to-br from-blue-400 to-blue-600";
+        newCardClass = "bg-blue-500/30 border-blue-400/50";
       } else if (
         weatherCondition?.includes("cloudy") ||
         weatherCondition?.includes("overcast")
       ) {
         newBackground = "bg-gradient-to-br from-gray-400 to-gray-600";
+        newCardClass = "bg-gray-500/30 border-gray-400/50";
       } else if (
         weatherCondition?.includes("rain") ||
         weatherCondition?.includes("drizzle")
       ) {
         newBackground = "bg-gradient-to-br from-gray-500 to-blue-800";
+        newCardClass = "bg-blue-700/30 border-blue-600/50";
       } else {
         newBackground = "bg-gradient-to-br from-blue-300 to-blue-500";
+        newCardClass = "bg-blue-400/30 border-blue-300/50";
       }
     } else {
       if (weatherCondition?.includes("clear")) {
         newBackground = "bg-gradient-to-br from-indigo-900 to-purple-900";
+        newCardClass = "bg-indigo-800/30 border-indigo-700/50";
       } else if (weatherCondition?.includes("cloudy")) {
         newBackground = "bg-gradient-to-br from-gray-800 to-gray-900";
+        newCardClass = "bg-gray-700/30 border-gray-600/50";
       } else if (weatherCondition?.includes("rain")) {
         newBackground = "bg-gradient-to-br from-gray-700 to-blue-900";
+        newCardClass = "bg-blue-800/30 border-blue-700/50";
       } else {
         newBackground = "bg-gradient-to-br from-gray-900 to-black";
+        newCardClass = "bg-gray-800/30 border-gray-700/50";
       }
     }
 
     setBackgroundClass(newBackground);
+    setCardClass(newCardClass);
   }, [weather]);
 
   // Format date
@@ -232,7 +246,9 @@ export default function Home() {
     <main
       className={`flex min-h-screen flex-col items-center justify-center p-4 transition-colors duration-1000 ${backgroundClass} text-white`}
     >
-      <Card className="w-full max-w-4xl bg-gray-800/80 backdrop-blur-sm border-gray-700/50 shadow-xl">
+      <Card
+        className={`w-full max-w-4xl backdrop-blur-sm shadow-xl transition-colors duration-1000 ${cardClass}`}
+      >
         <CardHeader className="text-center">
           <CardTitle className="text-2xl md:text-3xl font-bold">
             Weatherly - Your Weather Reporter
