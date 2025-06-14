@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -92,16 +93,9 @@ export default function Home() {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [currentTime, setCurrentTime] = useState(new Date());
   const [backgroundClass, setBackgroundClass] = useState(
     "bg-gradient-to-br from-gray-900 to-black"
   );
-
-  // Update time every minute
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
-    return () => clearInterval(timer);
-  }, []);
 
   // Set background based on time and weather
   useEffect(() => {
@@ -183,7 +177,6 @@ export default function Home() {
       }
       const data = await response.json();
       setWeather(data);
-      setCurrentTime(new Date(data.location?.localtime || new Date()));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch weather");
       setWeather(null);
@@ -194,7 +187,7 @@ export default function Home() {
 
   useEffect(() => {
     fetchWeather(location);
-  }, []);
+  }, [location]);
 
   const handleSearch = () => {
     if (location.trim()) {
@@ -208,10 +201,9 @@ export default function Home() {
 
     const now = new Date();
     const currentHour = now.getHours();
+    const hoursToShow = 8;
 
-    // Get the next 8 hours of forecast
     const hourlyData = [];
-    let hoursToShow = 8;
 
     for (let i = 0; i < hoursToShow; i++) {
       const hourIndex = currentHour + i;
@@ -276,12 +268,14 @@ export default function Home() {
               </div>
               <div className="w-32 h-32 flex items-center justify-center">
                 {weather?.current?.condition?.icon ? (
-                  <img
+                  <Image
                     src={`https:${weather.current.condition.icon.replace(
                       "64x64",
                       "128x128"
                     )}`}
                     alt={weather.current.condition.text}
+                    width={128}
+                    height={128}
                     className="w-full h-full object-contain"
                   />
                 ) : (
@@ -302,9 +296,11 @@ export default function Home() {
                     >
                       <div className="text-xs font-medium">{hour.time}</div>
                       {hour.icon && (
-                        <img
+                        <Image
                           src={`https:${hour.icon}`}
                           alt={hour.condition}
+                          width={32}
+                          height={32}
                           className="w-8 h-8 my-1"
                         />
                       )}
@@ -348,9 +344,11 @@ export default function Home() {
                   </span>
                   <div className="flex items-center gap-2">
                     {day.day?.condition.icon && (
-                      <img
+                      <Image
                         src={`https:${day.day.condition.icon}`}
                         alt={day.day.condition.text}
+                        width={24}
+                        height={24}
                         className="w-6 h-6"
                       />
                     )}
