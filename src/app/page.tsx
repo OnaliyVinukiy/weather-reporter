@@ -14,6 +14,10 @@ interface WeatherData {
     humidity: number;
     wind_kph: number;
     uv: number;
+    condition: {
+      text: string;
+      icon: string;
+    };
   };
 }
 
@@ -98,7 +102,21 @@ export default function Home() {
                   <span className="text-sm font-medium">Location:</span>
                   <span className="text-sm">{weather.location?.name}</span>
                 </div>
-
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Condition:</span>
+                  <div className="flex items-center gap-2">
+                    {weather.current.condition.icon && (
+                      <img
+                        src={`https:${weather.current.condition.icon}`}
+                        alt={weather.current.condition.text}
+                        className="w-6 h-6"
+                      />
+                    )}
+                    <span className="text-sm">
+                      {weather.current.condition.text}
+                    </span>
+                  </div>
+                </div>
                 <div className="flex justify-between">
                   <span className="text-sm font-medium">Temperature:</span>
                   <span className="text-sm">{weather.current.temp_c}°C</span>
