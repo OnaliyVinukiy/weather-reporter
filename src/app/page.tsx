@@ -346,7 +346,7 @@ export default function Home() {
         condition.includes("cloud") ||
         condition.includes("overcast")
       ) {
-        return "from-gray-300 via-slate-400 to-gray-500";
+        return "from-slate-600 via-gray-700 to-gray-800";
       } else if (condition.includes("rain") || condition.includes("drizzle")) {
         return "from-blue-600 via-blue-700 to-blue-800";
       } else if (condition.includes("snow") || condition.includes("sleet")) {
@@ -718,60 +718,56 @@ export default function Home() {
           </div>
         </div>
 
-        {/* 7-Day Forecast */}
+        {/* 7-Day Forecast*/}
         <div className="bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-8">
           <h3 className="text-2xl font-semibold text-white mb-6">
             7-Day Forecast
           </h3>
-          <div className="space-y-4">
+          <div className="flex space-x-4 overflow-x-auto pb-4 scrollbar-hide">
             {weather?.forecast?.forecastday?.map((day, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-all"
+                className="flex flex-col items-center min-w-[140px] flex-shrink-0 bg-white/10 rounded-2xl p-4 hover:bg-white/20 transition-all text-center"
               >
-                <div className="flex items-center space-x-4 flex-1">
-                  <div className="text-white font-medium min-w-[100px]">
-                    {index === 0
-                      ? "Today"
-                      : new Date(day.date).toLocaleDateString("en-US", {
-                          weekday: "short",
-                        })}
-                  </div>
-                  {getWeatherIcon(day.day.condition.text, true, false)}
-                  <div className="text-white/80 flex-1">
-                    {day.day.condition.text}
-                  </div>
+                <div className="text-white/80 font-medium mb-2">
+                  {index === 0
+                    ? "Today"
+                    : new Date(day.date).toLocaleDateString("en-US", {
+                        weekday: "short",
+                      })}
                 </div>
-
-                <div className="flex items-center space-x-6">
-                  <div className="text-right">
-                    <div className="flex items-center text-white/60 text-sm mb-1">
-                      <Droplets size={12} className="mr-1" />
-                      {day.day.totalprecip_mm.toFixed(1)}mm
-                    </div>
-                    <div className="flex items-center text-white/60 text-sm">
-                      <Wind size={12} className="mr-1" />
-                      {Math.round(day.day.maxwind_kph)}km/h
-                    </div>
-                  </div>
-
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-white">
-                      {Math.round(day.day.maxtemp_c)}°
-                    </div>
-                    <div className="text-white/60">
-                      {Math.round(day.day.mintemp_c)}°
-                    </div>
-                  </div>
+                <div className="mb-3">
+                  {getWeatherIcon(day.day.condition.text, true, false)}
+                </div>
+                <div className="text-white/60 text-sm mb-2 capitalize">
+                  {day.day.condition.text}
+                </div>
+                <div className="text-white font-semibold">
+                  <span className="text-xl">
+                    {Math.round(day.day.maxtemp_c)}°
+                  </span>
+                  <span className="text-white/60 ml-2">
+                    {Math.round(day.day.mintemp_c)}°
+                  </span>
+                </div>
+                <div className="flex items-center text-blue-400 text-xs mt-2">
+                  <Droplets size={12} className="mr-1" />
+                  {day.day.totalprecip_mm.toFixed(1)}mm
+                </div>
+                <div className="flex items-center text-white/60 text-xs mt-1">
+                  <Wind size={12} className="mr-1" />
+                  {Math.round(day.day.maxwind_kph)}km/h
                 </div>
               </div>
             )) ||
               Array.from({ length: 7 }).map((_, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between p-4 bg-white/5 rounded-2xl animate-pulse"
+                  className="flex flex-col items-center min-w-[140px] flex-shrink-0 bg-white/5 rounded-2xl p-4 animate-pulse"
                 >
-                  <div className="h-6 bg-white/10 rounded w-32"></div>
+                  <div className="h-6 bg-white/10 rounded w-20 mb-2"></div>
+                  <div className="h-10 w-10 bg-white/10 rounded-full mb-3"></div>
+                  <div className="h-4 bg-white/10 rounded w-24 mb-2"></div>
                   <div className="h-6 bg-white/10 rounded w-16"></div>
                 </div>
               ))}
