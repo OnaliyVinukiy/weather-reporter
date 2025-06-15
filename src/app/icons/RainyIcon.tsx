@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 const RainyIcon: React.FC<{ size?: number; cloudColor?: string; dropColor?: string }> = ({
   size = 80,
   cloudColor = '#94A3B8',
-  dropColor = '#60A5FA', // Light blue for rain drops
+  dropColor = '#60A5FA',
 }) => (
   <motion.svg
     width={size}
