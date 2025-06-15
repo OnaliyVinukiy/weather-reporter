@@ -27,6 +27,7 @@ import StormyIcon from "./icons/StormyIcon";
 import MoonIcon from "./icons/MoonIcon";
 import PartlyCloudyDayIcon from "./icons/PartlyCloudyDayIcon";
 import PartlyCloudyNightIcon from "./icons/PartlyCloudyNightIcon";
+import RainyBackground from "./components/RainyBackground";
 
 interface WeatherData {
   location?: {
@@ -565,11 +566,22 @@ export default function Home() {
       ? (weather.current.feelslike_c * 9) / 5 + 32
       : null;
 
+  const isRaining =
+    weather?.current?.condition?.text?.toLowerCase().includes("rain") ||
+    weather?.current?.condition?.text?.toLowerCase().includes("drizzle");
+
   return (
     <div
-      className={`min-h-screen bg-gradient-to-br ${getBackgroundGradient()} transition-all duration-1000`}
+      className={`min-h-screen bg-gradient-to-br ${getBackgroundGradient()} transition-all duration-1000 relative`}
     >
-      {/* Animated background elements */}
+      {isRaining && (
+        <RainyBackground
+          intensity={200}
+          speed={15}
+          color="rgba(173, 216, 230, 0.7)"
+        />
+      )}
+
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-20 w-64 h-64 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-20 right-20 w-96 h-96 bg-white/3 rounded-full blur-3xl animate-pulse delay-1000"></div>
