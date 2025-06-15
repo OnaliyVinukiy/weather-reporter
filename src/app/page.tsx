@@ -1,13 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
 import {
-  Cloud,
-  Sun,
-  CloudRain,
   Wind,
   Droplets,
   Eye,
-  Thermometer,
   Gauge,
   Sunrise,
   Sunset,
@@ -15,7 +11,18 @@ import {
   MapPin,
   Search,
   RefreshCw,
+  Sun,
 } from "lucide-react";
+
+// Import animated icon components
+import SunnyIcon from "./icons/SunnyIcon";
+import CloudyIcon from "./icons/CloudyIcon";
+import RainyIcon from "./icons/RainyIcon";
+import SnowyIcon from "./icons/SnowyIcon";
+import StormyIcon from "./icons/StormyIcon";
+import MoonIcon from "./icons/MoonIcon";
+import PartlyCloudyDayIcon from "./icons/PartlyCloudyDayIcon";
+import PartlyCloudyNightIcon from "./icons/PartlyCloudyNightIcon";
 
 interface WeatherData {
   location?: {
@@ -74,6 +81,176 @@ interface WeatherData {
     }>;
   };
 }
+
+// Map weather conditions to animated icons and colors
+const weatherIcons: {
+  [key: string]: {
+    component: React.FC<{
+      size?: number;
+      isDay?: boolean;
+      sunColor?: string;
+      moonColor?: string;
+      cloudColor?: string;
+      dropColor?: string;
+      snowflakeColor?: string;
+      lightningColor?: string;
+      color?: string;
+    }>;
+    colors: {
+      sunColor?: string;
+      moonColor?: string;
+      cloudColor?: string;
+      dropColor?: string;
+      snowflakeColor?: string;
+      lightningColor?: string;
+      color?: string;
+    };
+  };
+} = {
+  // Day conditions
+  sunny: {
+    component: SunnyIcon,
+    colors: { color: "#FCD34D" },
+  },
+  clear: {
+    component: SunnyIcon,
+    colors: { color: "#FCD34D" },
+  },
+  "partly cloudy_day": {
+    component: PartlyCloudyDayIcon,
+    colors: { sunColor: "#FCD34D", cloudColor: "#BFDBFE" },
+  },
+  cloudy_day: {
+    component: CloudyIcon,
+    colors: { color: "#9CA3AF" },
+  },
+  overcast_day: {
+    component: CloudyIcon,
+    colors: { color: "#9CA3AF" },
+  },
+  rain_day: {
+    component: RainyIcon,
+    colors: { cloudColor: "#9CA3AF", dropColor: "#60A5FA" },
+  },
+  drizzle_day: {
+    component: RainyIcon,
+    colors: { cloudColor: "#9CA3AF", dropColor: "#60A5FA" },
+  },
+  "light rain_day": {
+    component: RainyIcon,
+    colors: { cloudColor: "#9CA3AF", dropColor: "#60A5FA" },
+  },
+  "moderate rain_day": {
+    component: RainyIcon,
+    colors: { cloudColor: "#9CA3AF", dropColor: "#60A5FA" },
+  },
+  "heavy rain_day": {
+    component: RainyIcon,
+    colors: { cloudColor: "#9CA3AF", dropColor: "#60A5FA" },
+  },
+  snow_day: {
+    component: SnowyIcon,
+    colors: { cloudColor: "#9CA3AF", snowflakeColor: "#E0F2F7" },
+  },
+  sleet_day: {
+    component: SnowyIcon,
+    colors: { cloudColor: "#9CA3AF", snowflakeColor: "#E0F2F7" },
+  },
+  thunder_day: {
+    component: StormyIcon,
+    colors: { cloudColor: "#6B7280", lightningColor: "#FACC15" },
+  },
+
+  // Night conditions
+  clear_night: {
+    component: MoonIcon,
+    colors: { color: "#BFDBFE" },
+  },
+  "partly cloudy_night": {
+    component: PartlyCloudyNightIcon,
+    colors: { moonColor: "#BFDBFE", cloudColor: "#6B7280" },
+  },
+  cloudy_night: {
+    component: CloudyIcon,
+    colors: { color: "#6B7280" },
+  },
+  overcast_night: {
+    component: CloudyIcon,
+    colors: { color: "#6B7280" },
+  },
+  rain_night: {
+    component: RainyIcon,
+    colors: { cloudColor: "#6B7280", dropColor: "#3B82F6" },
+  },
+  drizzle_night: {
+    component: RainyIcon,
+    colors: { cloudColor: "#6B7280", dropColor: "#3B82F6" },
+  },
+  "light rain_night": {
+    component: RainyIcon,
+    colors: { cloudColor: "#6B7280", dropColor: "#3B82F6" },
+  },
+  "moderate rain_night": {
+    component: RainyIcon,
+    colors: { cloudColor: "#6B7280", dropColor: "#3B82F6" },
+  },
+  "heavy rain_night": {
+    component: RainyIcon,
+    colors: { cloudColor: "#6B7280", dropColor: "#3B82F6" },
+  },
+  snow_night: {
+    component: SnowyIcon,
+    colors: { cloudColor: "#6B7280", snowflakeColor: "#E0F2F7" },
+  },
+  sleet_night: {
+    component: SnowyIcon,
+    colors: { cloudColor: "#6B7280", snowflakeColor: "#E0F2F7" },
+  },
+  thunder_night: {
+    component: StormyIcon,
+    colors: { cloudColor: "#4B5563", lightningColor: "#FACC15" },
+  },
+};
+
+// Component to render animated weather icons
+const AnimatedWeatherIcon: React.FC<{
+  condition: string;
+  isDay: boolean;
+  size?: number;
+}> = ({ condition, isDay, size = 80 }) => {
+  const normalizedCondition = condition.toLowerCase();
+  let iconKey = "";
+
+  if (
+    normalizedCondition.includes("sunny") ||
+    normalizedCondition.includes("clear")
+  ) {
+    iconKey = isDay ? "sunny" : "clear_night";
+  } else if (normalizedCondition.includes("partly cloudy")) {
+    iconKey = isDay ? "partly cloudy_day" : "partly cloudy_night";
+  } else if (normalizedCondition.includes("cloud")) {
+    iconKey = isDay ? "cloudy_day" : "cloudy_night";
+  } else if (normalizedCondition.includes("overcast")) {
+    iconKey = isDay ? "overcast_day" : "overcast_night";
+  } else if (
+    normalizedCondition.includes("rain") ||
+    normalizedCondition.includes("drizzle")
+  ) {
+    iconKey = isDay ? "rain_day" : "rain_night";
+  } else if (
+    normalizedCondition.includes("snow") ||
+    normalizedCondition.includes("sleet")
+  ) {
+    iconKey = isDay ? "snow_day" : "snow_night";
+  } else if (normalizedCondition.includes("thunder")) {
+    iconKey = isDay ? "thunder_day" : "thunder_night";
+  }
+
+  const { component: IconComponent, colors } =
+    weatherIcons[iconKey] || weatherIcons.sunny;
+
+  return <IconComponent size={size} isDay={isDay} {...colors} />;
+};
 
 export default function Home() {
   const [location, setLocation] = useState("Colombo");
@@ -157,29 +334,43 @@ export default function Home() {
   }, []);
 
   const getBackgroundGradient = () => {
-    if (!weather?.current) return "from-slate-900 via-purple-900 to-slate-900";
+    if (!weather?.current) return "from-indigo-900 via-gray-800 to-slate-900";
 
     const isDay = weather.current.is_day === 1;
     const condition = weather.current.condition.text.toLowerCase();
 
     if (isDay) {
       if (condition.includes("sunny") || condition.includes("clear")) {
-        return "from-blue-400 via-cyan-500 to-blue-600";
-      } else if (condition.includes("cloud")) {
-        return "from-gray-400 via-slate-500 to-gray-600";
-      } else if (condition.includes("rain")) {
-        return "from-slate-600 via-blue-700 to-slate-800";
+        return "from-blue-300 via-cyan-400 to-blue-500";
+      } else if (
+        condition.includes("cloud") ||
+        condition.includes("overcast")
+      ) {
+        return "from-gray-300 via-slate-400 to-gray-500";
+      } else if (condition.includes("rain") || condition.includes("drizzle")) {
+        return "from-blue-600 via-blue-700 to-blue-800";
+      } else if (condition.includes("snow") || condition.includes("sleet")) {
+        return "from-blue-200 via-blue-300 to-blue-400";
+      } else if (condition.includes("thunder")) {
+        return "from-gray-700 via-gray-800 to-gray-900";
       }
-      return "from-sky-400 via-blue-500 to-indigo-600";
+      return "from-sky-300 via-blue-400 to-indigo-500";
     } else {
       if (condition.includes("clear")) {
-        return "from-indigo-900 via-purple-900 to-slate-900";
-      } else if (condition.includes("cloud")) {
-        return "from-slate-800 via-gray-900 to-black";
-      } else if (condition.includes("rain")) {
-        return "from-slate-700 via-blue-900 to-black";
+        return "from-indigo-800 via-purple-700 to-slate-800";
+      } else if (
+        condition.includes("cloud") ||
+        condition.includes("overcast")
+      ) {
+        return "from-slate-700 via-gray-800 to-black";
+      } else if (condition.includes("rain") || condition.includes("drizzle")) {
+        return "from-slate-800 via-blue-900 to-black";
+      } else if (condition.includes("snow") || condition.includes("sleet")) {
+        return "from-blue-700 via-blue-800 to-blue-900";
+      } else if (condition.includes("thunder")) {
+        return "from-gray-800 via-gray-900 to-black";
       }
-      return "from-slate-900 via-purple-900 to-black";
+      return "from-slate-800 via-purple-800 to-black";
     }
   };
 
@@ -191,28 +382,15 @@ export default function Home() {
     });
   };
 
-  const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const getWeatherIcon = (condition: string, isLarge = false) => {
+  const getWeatherIcon = (
+    condition: string,
+    isDay: boolean,
+    isLarge = false
+  ) => {
     const size = isLarge ? 80 : 24;
-    const condition_lower = condition.toLowerCase();
-
-    if (
-      condition_lower.includes("sunny") ||
-      condition_lower.includes("clear")
-    ) {
-      return <Sun size={size} className="text-yellow-400" />;
-    } else if (condition_lower.includes("cloud")) {
-      return <Cloud size={size} className="text-gray-300" />;
-    } else if (condition_lower.includes("rain")) {
-      return <CloudRain size={size} className="text-blue-400" />;
-    }
-    return <Sun size={size} className="text-yellow-400" />;
+    return (
+      <AnimatedWeatherIcon condition={condition} isDay={isDay} size={size} />
+    );
   };
 
   const getHourlyForecast = () => {
@@ -385,7 +563,11 @@ export default function Home() {
                     <div className="animate-pulse bg-white/20 rounded-full h-20 w-20"></div>
                   ) : (
                     weather?.current?.condition?.text &&
-                    getWeatherIcon(weather.current.condition.text, true)
+                    getWeatherIcon(
+                      weather.current.condition.text,
+                      weather.current.is_day === 1,
+                      true
+                    )
                   )}
                 </div>
               </div>
@@ -518,7 +700,7 @@ export default function Home() {
                 <div className="text-white/80 font-medium mb-2">
                   {hour.time}
                 </div>
-                {getWeatherIcon(hour.condition)}
+                {getWeatherIcon(hour.condition, hour.isDay)}
                 <div className="text-2xl font-bold text-white my-3">
                   {hour.temp}°
                 </div>
@@ -555,7 +737,7 @@ export default function Home() {
                           weekday: "short",
                         })}
                   </div>
-                  {getWeatherIcon(day.day.condition.text)}
+                  {getWeatherIcon(day.day.condition.text, true, false)}
                   <div className="text-white/80 flex-1">
                     {day.day.condition.text}
                   </div>
