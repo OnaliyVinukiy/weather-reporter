@@ -1,21 +1,38 @@
 "use client";
 import { useState, useEffect } from "react";
-import Image from "next/image";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  Cloud,
+  Sun,
+  CloudRain,
+  Wind,
+  Droplets,
+  Eye,
+  Thermometer,
+  Gauge,
+  Sunrise,
+  Sunset,
+  Moon,
+  MapPin,
+  Search,
+  RefreshCw,
+} from "lucide-react";
 
 interface WeatherData {
   location?: {
     name: string;
+    country: string;
     localtime: string;
   };
   current?: {
     temp_c: number;
+    temp_f: number;
     humidity: number;
     wind_kph: number;
+    wind_dir: string;
+    pressure_mb: number;
+    vis_km: number;
     uv: number;
+    feelslike_c: number;
     condition: {
       text: string;
       icon: string;
@@ -25,64 +42,34 @@ interface WeatherData {
   forecast?: {
     forecastday?: Array<{
       date: string;
-      date_epoch: number;
       day: {
         maxtemp_c: number;
         mintemp_c: number;
-        avgtemp_c: number;
+        avghumidity: number;
         maxwind_kph: number;
         totalprecip_mm: number;
-        avgvis_km: number;
-        avghumidity: number;
         condition: {
           text: string;
           icon: string;
-          code: number;
         };
         uv: number;
       };
       astro: {
         sunrise: string;
         sunset: string;
-        moonrise: string;
-        moonset: string;
         moon_phase: string;
-        moon_illumination: string;
-        is_moon_up: number;
-        is_sun_up: number;
       };
       hour: Array<{
-        time_epoch: number;
         time: string;
         temp_c: number;
-        temp_f: number;
         condition: {
           text: string;
           icon: string;
-          code: number;
         };
-        wind_kph: number;
-        wind_degree: number;
-        wind_dir: string;
-        pressure_mb: number;
-        pressure_in: number;
         precip_mm: number;
-        precip_in: number;
         humidity: number;
-        cloud: number;
-        feelslike_c: number;
-        feelslike_f: number;
-        windchill_c: number;
-        windchill_f: number;
-        heatindex_c: number;
-        heatindex_f: number;
-        dewpoint_c: number;
-        dewpoint_f: number;
-        will_it_rain: number;
-        will_it_snow: number;
+        wind_kph: number;
         is_day: number;
-        vis_km: number;
-        vis_miles: number;
       }>;
     }>;
   };
@@ -93,355 +80,522 @@ export default function Home() {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [backgroundClass, setBackgroundClass] = useState(
-    "bg-gradient-to-br from-gray-900 to-black"
-  );
-  const [cardClass, setCardClass] = useState(
-    "bg-gray-800/80 border-gray-700/50"
-  );
+  const [unit, setUnit] = useState<"C" | "F">("C");
+  const [searchInput, setSearchInput] = useState("");
 
-  // Set background based on time and weather
-  useEffect(() => {
-    if (!weather) return;
-
-    const isDay = weather.current?.is_day === 1;
-    const weatherCondition = weather.current?.condition.text.toLowerCase();
-
-    let newBackground = "";
-    let newCardClass = "";
-
-    if (isDay) {
-      if (
-        weatherCondition?.includes("sunny") ||
-        weatherCondition?.includes("clear")
-      ) {
-        newBackground = "bg-gradient-to-br from-blue-400 to-blue-600";
-        newCardClass = "bg-blue-500/30 border-blue-400/50";
-      } else if (
-        weatherCondition?.includes("cloudy") ||
-        weatherCondition?.includes("overcast")
-      ) {
-        newBackground = "bg-gradient-to-br from-gray-400 to-gray-600";
-        newCardClass = "bg-gray-500/30 border-gray-400/50";
-      } else if (
-        weatherCondition?.includes("rain") ||
-        weatherCondition?.includes("drizzle")
-      ) {
-        newBackground = "bg-gradient-to-br from-gray-500 to-blue-800";
-        newCardClass = "bg-blue-700/30 border-blue-600/50";
-      } else {
-        newBackground = "bg-gradient-to-br from-blue-300 to-blue-500";
-        newCardClass = "bg-blue-400/30 border-blue-300/50";
-      }
-    } else {
-      if (weatherCondition?.includes("clear")) {
-        newBackground = "bg-gradient-to-br from-indigo-900 to-purple-900";
-        newCardClass = "bg-indigo-800/30 border-indigo-700/50";
-      } else if (weatherCondition?.includes("cloudy")) {
-        newBackground = "bg-gradient-to-br from-gray-800 to-gray-900";
-        newCardClass = "bg-gray-700/30 border-gray-600/50";
-      } else if (weatherCondition?.includes("rain")) {
-        newBackground = "bg-gradient-to-br from-gray-700 to-blue-900";
-        newCardClass = "bg-blue-800/30 border-blue-700/50";
-      } else {
-        newBackground = "bg-gradient-to-br from-gray-900 to-black";
-        newCardClass = "bg-gray-800/30 border-gray-700/50";
-      }
-    }
-
-    setBackgroundClass(newBackground);
-    setCardClass(newCardClass);
-  }, [weather]);
-
-  // Format date
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
-  // Format time
-  const formatTime = (dateString?: string) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const extractHourFromTimeString = (timeString: string) => {
-    return timeString.split(" ")[1].substring(0, 5);
-  };
-
-  // Fetch and display weather data
+  // Fetch weather data from API
   const fetchWeather = async (city: string) => {
     setLoading(true);
     setError("");
+
     try {
+      const API_KEY = process.env.NEXT_PUBLIC_WEATHER_API_KEY;
+
       const response = await fetch(
-        `https://api.weatherapi.com/v1/forecast.json?key=${process.env.NEXT_PUBLIC_WEATHER_API_KEY}&q=${city}&days=7&aqi=no`
+        `https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${encodeURIComponent(
+          city
+        )}&days=7&aqi=no&alerts=no`
       );
+
       if (!response.ok) {
-        throw new Error("City not found");
+        if (response.status === 400) {
+          throw new Error(
+            "City not found. Please check the spelling and try again."
+          );
+        } else if (response.status === 401) {
+          throw new Error(
+            "Invalid API key. Please check your WeatherAPI configuration."
+          );
+        } else if (response.status === 403) {
+          throw new Error(
+            "API key exceeded the allowed limit. Please check your subscription."
+          );
+        } else {
+          throw new Error(
+            "Failed to fetch weather data. Please try again later."
+          );
+        }
       }
+
       const data = await response.json();
       setWeather(data);
+      setLocation(data.location.name);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch weather");
-      setWeather(null);
+      const errorMessage =
+        err instanceof Error ? err.message : "An unexpected error occurred";
+      setError(errorMessage);
+      console.error("Weather fetch error:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchWeather(location);
-  }, [location]);
+  // Search for weather
+  const handleSearch = async () => {
+    if (searchInput.trim()) {
+      await fetchWeather(searchInput.trim());
+    }
+  };
 
-  const handleSearch = () => {
-    if (location.trim()) {
+  // Handle key press in search
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
+  // Refresh current location weather
+  const handleRefresh = () => {
+    if (location) {
       fetchWeather(location);
     }
   };
 
-  // Get hourly forecast for the current day
+  // Load default city on component mount
+  useEffect(() => {
+    fetchWeather("Colombo");
+  }, []);
+
+  const getBackgroundGradient = () => {
+    if (!weather?.current) return "from-slate-900 via-purple-900 to-slate-900";
+
+    const isDay = weather.current.is_day === 1;
+    const condition = weather.current.condition.text.toLowerCase();
+
+    if (isDay) {
+      if (condition.includes("sunny") || condition.includes("clear")) {
+        return "from-blue-400 via-cyan-500 to-blue-600";
+      } else if (condition.includes("cloud")) {
+        return "from-gray-400 via-slate-500 to-gray-600";
+      } else if (condition.includes("rain")) {
+        return "from-slate-600 via-blue-700 to-slate-800";
+      }
+      return "from-sky-400 via-blue-500 to-indigo-600";
+    } else {
+      if (condition.includes("clear")) {
+        return "from-indigo-900 via-purple-900 to-slate-900";
+      } else if (condition.includes("cloud")) {
+        return "from-slate-800 via-gray-900 to-black";
+      } else if (condition.includes("rain")) {
+        return "from-slate-700 via-blue-900 to-black";
+      }
+      return "from-slate-900 via-purple-900 to-black";
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const getWeatherIcon = (condition: string, isLarge = false) => {
+    const size = isLarge ? 80 : 24;
+    const condition_lower = condition.toLowerCase();
+
+    if (
+      condition_lower.includes("sunny") ||
+      condition_lower.includes("clear")
+    ) {
+      return <Sun size={size} className="text-yellow-400" />;
+    } else if (condition_lower.includes("cloud")) {
+      return <Cloud size={size} className="text-gray-300" />;
+    } else if (condition_lower.includes("rain")) {
+      return <CloudRain size={size} className="text-blue-400" />;
+    }
+    return <Sun size={size} className="text-yellow-400" />;
+  };
+
   const getHourlyForecast = () => {
     if (!weather?.forecast?.forecastday?.[0]?.hour) return [];
 
     const now = new Date();
     const currentHour = now.getHours();
-    const hoursToShow = 8;
 
-    const hourlyData = [];
-
-    for (let i = 0; i < hoursToShow; i++) {
-      const hourIndex = currentHour + i;
-      if (hourIndex >= 24) break;
-
-      const hourData = weather.forecast.forecastday[0].hour[hourIndex];
-      if (!hourData) continue;
-
-      hourlyData.push({
-        time: extractHourFromTimeString(hourData.time),
-        temp: Math.round(hourData.temp_c),
-        icon: hourData.condition.icon,
-        condition: hourData.condition.text,
-        precipitation: hourData.precip_mm,
-        humidity: hourData.humidity,
-        wind: hourData.wind_kph,
-      });
-    }
-
-    return hourlyData;
+    return weather.forecast.forecastday[0].hour
+      .slice(currentHour, currentHour + 12)
+      .map((hour) => ({
+        time:
+          new Date(hour.time).getHours().toString().padStart(2, "0") + ":00",
+        temp: Math.round(hour.temp_c),
+        condition: hour.condition.text,
+        icon: hour.condition.icon,
+        precipitation: hour.precip_mm,
+        isDay: hour.is_day === 1,
+      }));
   };
 
-  const hourlyForecast = getHourlyForecast();
+  const currentTemp =
+    unit === "C" ? weather?.current?.temp_c : weather?.current?.temp_f;
+  const feelsLike =
+    unit === "C"
+      ? weather?.current?.feelslike_c
+      : weather?.current?.feelslike_c
+      ? (weather.current.feelslike_c * 9) / 5 + 32
+      : null;
 
   return (
-    <main
-      className={`flex min-h-screen flex-col items-center justify-center p-4 transition-colors duration-1000 ${backgroundClass} text-white`}
+    <div
+      className={`min-h-screen bg-gradient-to-br ${getBackgroundGradient()} transition-all duration-1000`}
     >
-      <Card
-        className={`w-full max-w-4xl backdrop-blur-sm shadow-xl transition-colors duration-1000 ${cardClass}`}
-      >
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl md:text-3xl font-bold">
-            Weatherly - Your Weather Reporter
-          </CardTitle>
-          <div className="text-sm text-gray-300 mt-1">
-            {weather?.location?.name || "Loading..."},{" "}
-            {formatDate(weather?.location?.localtime)} -{" "}
-            {formatTime(weather?.location?.localtime)}
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-20 w-64 h-64 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-white/3 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/3 w-48 h-48 bg-white/4 rounded-full blur-2xl animate-pulse delay-500"></div>
+      </div>
+
+      <div className="relative z-10 container mx-auto px-4 py-8 max-w-7xl">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-5xl md:text-7xl font-bold text-white mb-4 tracking-tight">
+            Weatherly
+          </h1>
+          <p className="text-xl text-white/80 font-light">
+            Your Modern Weather Dashboard
+          </p>
+        </div>
+
+        {/* Search Bar */}
+        <div className="max-w-md mx-auto mb-8">
+          <div className="relative">
+            <MapPin
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/60"
+              size={20}
+            />
+            <input
+              type="text"
+              placeholder="Search for a city..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              disabled={loading}
+              className="w-full pl-12 pr-12 py-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-transparent transition-all disabled:opacity-50"
+            />
+            <button
+              onClick={handleSearch}
+              disabled={loading || !searchInput.trim()}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 bg-white/20 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all"
+            >
+              {loading ? (
+                <div className="animate-spin w-5 h-5 border-2 border-white/60 border-t-white rounded-full"></div>
+              ) : (
+                <Search size={20} className="text-white" />
+              )}
+            </button>
           </div>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-6 p-4 md:p-6">
-          {/* Current Weather */}
-          <div className="col-span-1 md:col-span-3">
-            <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
-              <div className="flex-1">
-                <div className="text-5xl md:text-7xl font-bold">
-                  {weather?.current?.temp_c
-                    ? Math.round(weather.current.temp_c)
-                    : "--"}
-                  °C
+
+          {/* Error Display */}
+          {error && (
+            <div className="mt-4 p-4 bg-red-500/20 backdrop-blur-md border border-red-500/30 rounded-2xl text-red-200 text-center">
+              <p className="font-medium">⚠️ {error}</p>
+              {error.includes("API key") && (
+                <p className="text-sm mt-2 text-red-300">
+                  Get a free API key from{" "}
+                  <a
+                    href="https://www.weatherapi.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:text-white transition-colors"
+                  >
+                    WeatherAPI.com
+                  </a>
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Main Weather Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+          {/* Current Weather - Large Card */}
+          <div className="lg:col-span-2">
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-8 h-full">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <div className="flex items-center text-white/80 mb-2">
+                    <MapPin size={20} className="mr-2" />
+                    <span className="text-lg">
+                      {weather?.location?.name}, {weather?.location?.country}
+                    </span>
+                  </div>
+                  <div className="text-white/60">
+                    {weather?.location?.localtime &&
+                      formatDate(weather.location.localtime)}
+                  </div>
                 </div>
-                <div className="text-xl md:text-2xl capitalize">
-                  {weather?.current?.condition?.text || "Loading..."}
-                </div>
-                <div className="text-sm text-gray-300 mt-2">
-                  Wind:{" "}
-                  {weather?.current?.wind_kph
-                    ? Math.round(weather.current.wind_kph)
-                    : "--"}{" "}
-                  km/h | Humidity: {weather?.current?.humidity || "--"}% | UV:{" "}
-                  {weather?.current?.uv || "--"}
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setUnit(unit === "C" ? "F" : "C")}
+                    className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl text-white transition-all"
+                  >
+                    °{unit}
+                  </button>
+                  <button
+                    className="p-2 bg-white/20 hover:bg-white/30 rounded-xl transition-all disabled:opacity-50"
+                    onClick={handleRefresh}
+                    disabled={loading}
+                    title="Refresh weather data"
+                  >
+                    <RefreshCw
+                      size={20}
+                      className={`text-white ${loading ? "animate-spin" : ""}`}
+                    />
+                  </button>
                 </div>
               </div>
-              <div className="w-32 h-32 flex items-center justify-center">
-                {weather?.current?.condition?.icon ? (
-                  <Image
-                    src={`https:${weather.current.condition.icon.replace(
-                      "64x64",
-                      "128x128"
-                    )}`}
-                    alt={weather.current.condition.text}
-                    width={128}
-                    height={128}
-                    className="w-full h-full object-contain"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gray-700/50 rounded-full"></div>
-                )}
+
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <div className="text-8xl md:text-9xl font-bold text-white mb-2">
+                    {loading ? (
+                      <div className="animate-pulse bg-white/20 rounded-lg h-24 w-48"></div>
+                    ) : (
+                      `${currentTemp ? Math.round(currentTemp) : "--"}°`
+                    )}
+                  </div>
+                  <div className="text-2xl text-white/80 capitalize mb-2">
+                    {loading ? (
+                      <div className="animate-pulse bg-white/20 rounded h-6 w-32"></div>
+                    ) : (
+                      weather?.current?.condition?.text || "Loading..."
+                    )}
+                  </div>
+                  <div className="text-lg text-white/60">
+                    {loading ? (
+                      <div className="animate-pulse bg-white/20 rounded h-4 w-24"></div>
+                    ) : (
+                      `Feels like ${
+                        feelsLike ? Math.round(feelsLike) : "--"
+                      }°${unit}`
+                    )}
+                  </div>
+                </div>
+                <div className="text-right">
+                  {loading ? (
+                    <div className="animate-pulse bg-white/20 rounded-full h-20 w-20"></div>
+                  ) : (
+                    weather?.current?.condition?.text &&
+                    getWeatherIcon(weather.current.condition.text, true)
+                  )}
+                </div>
+              </div>
+
+              {/* Weather Stats Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white/10 rounded-2xl p-4 text-center">
+                  <Wind className="mx-auto mb-2 text-white/80" size={24} />
+                  <div className="text-white/60 text-sm">Wind</div>
+                  <div className="text-white font-semibold">
+                    {weather?.current?.wind_kph
+                      ? Math.round(weather.current.wind_kph)
+                      : "--"}{" "}
+                    km/h
+                  </div>
+                  <div className="text-white/60 text-xs">
+                    {weather?.current?.wind_dir}
+                  </div>
+                </div>
+
+                <div className="bg-white/10 rounded-2xl p-4 text-center">
+                  <Droplets className="mx-auto mb-2 text-white/80" size={24} />
+                  <div className="text-white/60 text-sm">Humidity</div>
+                  <div className="text-white font-semibold">
+                    {weather?.current?.humidity || "--"}%
+                  </div>
+                </div>
+
+                <div className="bg-white/10 rounded-2xl p-4 text-center">
+                  <Eye className="mx-auto mb-2 text-white/80" size={24} />
+                  <div className="text-white/60 text-sm">Visibility</div>
+                  <div className="text-white font-semibold">
+                    {weather?.current?.vis_km || "--"} km
+                  </div>
+                </div>
+
+                <div className="bg-white/10 rounded-2xl p-4 text-center">
+                  <Gauge className="mx-auto mb-2 text-white/80" size={24} />
+                  <div className="text-white/60 text-sm">Pressure</div>
+                  <div className="text-white font-semibold">
+                    {weather?.current?.pressure_mb || "--"} mb
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Today's Highlights */}
+          <div className="space-y-6">
+            {/* UV Index */}
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-6">
+              <h3 className="text-white font-semibold mb-4 flex items-center">
+                <Sun className="mr-2" size={20} />
+                UV Index
+              </h3>
+              <div className="text-4xl font-bold text-white mb-2">
+                {weather?.current?.uv || "--"}
+              </div>
+              <div className="w-full bg-white/20 rounded-full h-2">
+                <div
+                  className="bg-gradient-to-r from-green-400 to-red-500 h-2 rounded-full transition-all duration-1000"
+                  style={{
+                    width: `${Math.min(
+                      (weather?.current?.uv || 0) * 10,
+                      100
+                    )}%`,
+                  }}
+                ></div>
+              </div>
+              <div className="text-white/60 text-sm mt-2">
+                {(weather?.current?.uv || 0) <= 2
+                  ? "Low"
+                  : (weather?.current?.uv || 0) <= 5
+                  ? "Moderate"
+                  : (weather?.current?.uv || 0) <= 7
+                  ? "High"
+                  : "Very High"}
               </div>
             </div>
 
-            {/* Hourly Forecast */}
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-2">Hourly Forecast</h3>
-              <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
-                {hourlyForecast.length > 0 ? (
-                  hourlyForecast.map((hour, index) => (
-                    <div
-                      key={index}
-                      className="flex flex-col items-center min-w-[80px] bg-gray-700/50 rounded-lg p-2"
-                    >
-                      <div className="text-xs font-medium">{hour.time}</div>
-                      {hour.icon && (
-                        <Image
-                          src={`https:${hour.icon}`}
-                          alt={hour.condition}
-                          width={32}
-                          height={32}
-                          className="w-8 h-8 my-1"
-                        />
-                      )}
-                      <div className="text-lg font-bold">{hour.temp}°C</div>
-                      <div className="text-xs text-gray-300">
-                        {hour.precipitation > 0
-                          ? `💧 ${hour.precipitation}mm`
-                          : ""}
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="flex space-x-2">
-                    {Array.from({ length: 8 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="flex flex-col items-center min-w-[80px] bg-gray-700/50 rounded-lg p-2 animate-pulse"
-                      >
-                        <div className="h-4 bg-gray-600/50 rounded w-12 mb-2"></div>
-                        <div className="w-8 h-8 bg-gray-600/50 rounded-full my-1"></div>
-                        <div className="h-6 bg-gray-600/50 rounded w-8"></div>
-                      </div>
-                    ))}
+            {/* Sunrise & Sunset */}
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-6">
+              <h3 className="text-white font-semibold mb-4">Sun & Moon</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Sunrise className="mr-3 text-orange-400" size={20} />
+                    <span className="text-white/80">Sunrise</span>
+                  </div>
+                  <span className="text-white font-semibold">
+                    {weather?.forecast?.forecastday?.[0]?.astro?.sunrise ||
+                      "--"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Sunset className="mr-3 text-orange-600" size={20} />
+                    <span className="text-white/80">Sunset</span>
+                  </div>
+                  <span className="text-white font-semibold">
+                    {weather?.forecast?.forecastday?.[0]?.astro?.sunset || "--"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Moon className="mr-3 text-blue-300" size={20} />
+                    <span className="text-white/80">Moon Phase</span>
+                  </div>
+                  <span className="text-white font-semibold">
+                    {weather?.forecast?.forecastday?.[0]?.astro?.moon_phase ||
+                      "--"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Hourly Forecast */}
+        <div className="bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-8 mb-8">
+          <h3 className="text-2xl font-semibold text-white mb-6">
+            Hourly Forecast
+          </h3>
+          <div className="flex space-x-4 overflow-x-auto pb-4 scrollbar-hide">
+            {getHourlyForecast().map((hour, index) => (
+              <div
+                key={index}
+                className="flex flex-col items-center min-w-[100px] bg-white/10 rounded-2xl p-4 hover:bg-white/20 transition-all"
+              >
+                <div className="text-white/80 font-medium mb-2">
+                  {hour.time}
+                </div>
+                {getWeatherIcon(hour.condition)}
+                <div className="text-2xl font-bold text-white my-3">
+                  {hour.temp}°
+                </div>
+                <div className="text-white/60 text-sm text-center">
+                  {hour.condition}
+                </div>
+                {hour.precipitation > 0 && (
+                  <div className="flex items-center text-blue-400 text-xs mt-2">
+                    <Droplets size={12} className="mr-1" />
+                    {hour.precipitation.toFixed(1)}mm
                   </div>
                 )}
               </div>
-            </div>
+            ))}
           </div>
+        </div>
 
-          {/* Weekly Forecast */}
-          <div className="col-span-1">
-            <h3 className="text-lg font-semibold mb-4">7-Day Forecast</h3>
-            <div className="space-y-3">
-              {weather?.forecast?.forecastday?.map((day, i) => (
+        {/* 7-Day Forecast */}
+        <div className="bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-8">
+          <h3 className="text-2xl font-semibold text-white mb-6">
+            7-Day Forecast
+          </h3>
+          <div className="space-y-4">
+            {weather?.forecast?.forecastday?.map((day, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-all"
+              >
+                <div className="flex items-center space-x-4 flex-1">
+                  <div className="text-white font-medium min-w-[100px]">
+                    {index === 0
+                      ? "Today"
+                      : new Date(day.date).toLocaleDateString("en-US", {
+                          weekday: "short",
+                        })}
+                  </div>
+                  {getWeatherIcon(day.day.condition.text)}
+                  <div className="text-white/80 flex-1">
+                    {day.day.condition.text}
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-6">
+                  <div className="text-right">
+                    <div className="flex items-center text-white/60 text-sm mb-1">
+                      <Droplets size={12} className="mr-1" />
+                      {day.day.totalprecip_mm.toFixed(1)}mm
+                    </div>
+                    <div className="flex items-center text-white/60 text-sm">
+                      <Wind size={12} className="mr-1" />
+                      {Math.round(day.day.maxwind_kph)}km/h
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-white">
+                      {Math.round(day.day.maxtemp_c)}°
+                    </div>
+                    <div className="text-white/60">
+                      {Math.round(day.day.mintemp_c)}°
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )) ||
+              Array.from({ length: 7 }).map((_, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between text-sm bg-gray-700/30 rounded-lg p-2"
+                  className="flex items-center justify-between p-4 bg-white/5 rounded-2xl animate-pulse"
                 >
-                  <span className="font-medium">
-                    {formatDate(day.date).split(",")[0]}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    {day.day?.condition.icon && (
-                      <Image
-                        src={`https:${day.day.condition.icon}`}
-                        alt={day.day.condition.text}
-                        width={24}
-                        height={24}
-                        className="w-6 h-6"
-                      />
-                    )}
-                    <span className="font-bold">
-                      {day.day?.maxtemp_c
-                        ? Math.round(day.day.maxtemp_c)
-                        : "--"}
-                      °C
-                    </span>
-                  </div>
+                  <div className="h-6 bg-white/10 rounded w-32"></div>
+                  <div className="h-6 bg-white/10 rounded w-16"></div>
                 </div>
-              )) ||
-                Array.from({ length: 7 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between text-sm bg-gray-700/30 rounded-lg p-2 animate-pulse"
-                  >
-                    <span className="h-4 bg-gray-600/50 rounded w-16"></span>
-                    <span className="h-4 bg-gray-600/50 rounded w-8"></span>
-                  </div>
-                ))}
-            </div>
+              ))}
           </div>
-
-          {/* Search */}
-          <div className="col-span-1 md:col-span-4">
-            <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="location" className="text-gray-300">
-                Location
-              </Label>
-              <div className="flex gap-2">
-                <Input
-                  id="location"
-                  placeholder="Enter a city"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                  className="bg-gray-700/80 text-white border-gray-600 focus:ring-2 focus:ring-blue-500"
-                />
-                <Button
-                  onClick={handleSearch}
-                  disabled={loading}
-                  className="bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-400 transition-colors"
-                >
-                  {loading ? (
-                    <span className="flex items-center gap-2">
-                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      Searching...
-                    </span>
-                  ) : (
-                    "Search"
-                  )}
-                </Button>
-              </div>
-            </div>
-            {error && (
-              <div className="mt-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-300 text-center">
-                {error}
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </main>
+        </div>
+      </div>
+    </div>
   );
 }
