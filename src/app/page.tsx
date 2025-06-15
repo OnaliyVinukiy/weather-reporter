@@ -12,6 +12,10 @@ import {
   Search,
   RefreshCw,
   Sun,
+  CloudLightning,
+  CloudRain,
+  ThermometerSun,
+  ThermometerSnowflake,
 } from "lucide-react";
 
 // Import animated icon components
@@ -252,6 +256,142 @@ const AnimatedWeatherIcon: React.FC<{
   return <IconComponent size={size} isDay={isDay} {...colors} />;
 };
 
+// Weather Tips
+const WeatherTips: React.FC<{
+  weather: WeatherData | null;
+  unit: "C" | "F";
+}> = ({ weather, unit }) => {
+  if (!weather || !weather.current) {
+    return (
+      <div className="bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-6">
+        <h3 className="text-white font-semibold mb-4 flex items-center">
+          Weather Tips
+        </h3>
+        <p className="text-white/80">Loading tips...</p>
+      </div>
+    );
+  }
+
+  const currentTemp =
+    unit === "C" ? weather.current.temp_c : weather.current.temp_f;
+  const humidity = weather.current.humidity;
+  const uvIndex = weather.current.uv;
+  const condition = weather.current.condition.text.toLowerCase();
+  const isDay = weather.current.is_day === 1;
+
+  let tips: { icon: React.ReactNode; text: string }[] = [];
+
+  // Temperature based tips
+  if (
+    (currentTemp > 30 && unit === "C") ||
+    (currentTemp > 86 && unit === "F")
+  ) {
+    tips.push({
+      icon: <ThermometerSun size={20} className="text-red-400" />,
+      text: "Stay hydrated! Drink plenty of water.",
+    });
+    tips.push({
+      icon: <Sun size={20} className="text-yellow-400" />,
+      text: "Seek shade during peak sun hours.",
+    });
+  } else if (
+    (currentTemp < 10 && unit === "C") ||
+    (currentTemp < 50 && unit === "F")
+  ) {
+    tips.push({
+      icon: <ThermometerSnowflake size={20} className="text-blue-300" />,
+      text: "Dress in layers to stay warm.",
+    });
+    tips.push({
+      icon: <Wind size={20} className="text-blue-200" />,
+      text: "Protect exposed skin from the cold wind.",
+    });
+  }
+
+  // Condition based tips
+  if (condition.includes("rain") || condition.includes("drizzle")) {
+    tips.push({
+      icon: <CloudRain size={20} className="text-blue-400" />,
+      text: "Don't forget your umbrella or raincoat!",
+    });
+    tips.push({
+      icon: <Droplets size={20} className="text-blue-400" />,
+      text: "Drive carefully, roads might be slippery.",
+    });
+  }
+  if (condition.includes("thunder") || condition.includes("storm")) {
+    tips.push({
+      icon: <CloudLightning size={20} className="text-yellow-300" />,
+      text: "Stay indoors during thunderstorms.",
+    });
+    tips.push({
+      icon: <CloudLightning size={20} className="text-yellow-300" />,
+      text: "Avoid open fields and tall trees.",
+    });
+  }
+  if (condition.includes("snow") || condition.includes("sleet")) {
+    tips.push({
+      icon: <SnowyIcon size={20} />,
+      text: "Wear waterproof boots and warm clothing.",
+    });
+    tips.push({
+      icon: <Droplets size={20} className="text-white" />,
+      text: "Be cautious of icy patches on roads and sidewalks.",
+    });
+  }
+  if (uvIndex >= 6 && isDay) {
+    tips.push({
+      icon: <Sun size={20} className="text-orange-400" />,
+      text: "Apply sunscreen generously (SPF 30+).",
+    });
+    tips.push({
+      icon: <Eye size={20} className="text-yellow-400" />,
+      text: "Wear sunglasses and a wide-brimmed hat.",
+    });
+  }
+  if (humidity > 70) {
+    tips.push({
+      icon: <Droplets size={20} className="text-cyan-400" />,
+      text: "High humidity can make it feel hotter; stay cool.",
+    });
+  }
+  if (weather.current.wind_kph > 30) {
+    tips.push({
+      icon: <Wind size={20} className="text-gray-300" />,
+      text: "Strong winds: secure loose outdoor items.",
+    });
+  }
+
+  // General tips
+  if (tips.length === 0) {
+    tips.push({
+      icon: <Sun size={20} className="text-yellow-300" />,
+      text: "Enjoy the weather!",
+    });
+    tips.push({
+      icon: <RefreshCw size={20} className="text-white/80" />,
+      text: "Check back for updates.",
+    });
+  }
+
+  return (
+    <div className="bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-6">
+      <h3 className="text-white font-semibold mb-4 flex items-center">
+        <Sun className="mr-2" size={20} />
+        Weather Tips
+      </h3>
+      <ul className="space-y-3">
+        {tips.map((tip, index) => (
+          <li key={index} className="flex items-center text-white/80 text-sm">
+            {tip.icon}
+            <span className="ml-3">{tip.text}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
 export default function Home() {
   const [location, setLocation] = useState("Colombo");
   const [weather, setWeather] = useState<WeatherData | null>(null);
@@ -267,6 +407,9 @@ export default function Home() {
 
     try {
       const API_KEY = process.env.NEXT_PUBLIC_WEATHER_API_KEY;
+      if (!API_KEY) {
+        throw new Error("Weather API Key is not configured.");
+      }
 
       const response = await fetch(
         `https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${encodeURIComponent(
@@ -615,7 +758,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Today's Highlights */}
+          {/* Today's Highlights and Weather Tips */}
           <div className="space-y-6">
             {/* UV Index */}
             <div className="bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-6">
@@ -683,6 +826,9 @@ export default function Home() {
                 </div>
               </div>
             </div>
+
+            {/* Weather Tips Card */}
+            <WeatherTips weather={weather} unit={unit} />
           </div>
         </div>
 
