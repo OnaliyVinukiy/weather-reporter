@@ -1,29 +1,34 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React from "react";
+import { motion } from "framer-motion";
 
-const PartlyCloudyNightIcon: React.FC<{ size?: number; moonColor?: string; cloudColor?: string }> = ({
-  size = 80,
-  moonColor = '#BFDBFE',
-  cloudColor = '#94A3B8',
-}) => (
+const PartlyCloudyNightIcon: React.FC<{
+  size?: number;
+  moonColor?: string;
+  cloudColor?: string;
+}> = ({ size = 80, moonColor = "#BFDBFE", cloudColor = "#94A3B8" }) => (
   <motion.svg
     width={size}
     height={size}
     viewBox="0 0 64 64"
     fill="none"
-    xmlns="http://www.w3.org/2000/svg"
+    xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)"
     initial="hidden"
     animate="visible"
   >
     {/* Moon */}
     <motion.circle
       cx="32"
-      cy="30"
+      cy="16"
       r="12"
       fill={moonColor}
       variants={{
         hidden: { scale: 0, opacity: 0, rotate: -90 },
-        visible: { scale: 1, opacity: 1, rotate: 0, transition: { duration: 0.6, type: "spring", stiffness: 100 } },
+        visible: {
+          scale: 1,
+          opacity: 1,
+          rotate: 0,
+          transition: { duration: 0.6, type: "spring", stiffness: 100 },
+        },
       }}
     />
     {/* Cloud */}
@@ -32,7 +37,11 @@ const PartlyCloudyNightIcon: React.FC<{ size?: number; moonColor?: string; cloud
       fill={cloudColor}
       variants={{
         hidden: { x: -100, opacity: 0 },
-        visible: { x: 0, opacity: 1, transition: { delay: 0.5, duration: 0.8, ease: "easeOut" } },
+        visible: {
+          x: 0,
+          opacity: 1,
+          transition: { delay: 0.5, duration: 0.8, ease: "easeOut" },
+        },
       }}
     />
   </motion.svg>
