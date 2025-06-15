@@ -122,7 +122,7 @@ const weatherIcons: {
   },
   "partly cloudy_day": {
     component: PartlyCloudyDayIcon,
-    colors: { sunColor: "#FCD34D", cloudColor: "#BFDBFE" },
+    colors: { sunColor: "#FCD34D", cloudColor: "#9CA3AF" },
   },
   cloudy_day: {
     component: CloudyIcon,
@@ -134,23 +134,23 @@ const weatherIcons: {
   },
   rain_day: {
     component: RainyIcon,
-    colors: { cloudColor: "#9CA3AF", dropColor: "#60A5FA" },
+    colors: { cloudColor: "#9CA3AF", dropColor: "#3BA8F6" },
   },
   drizzle_day: {
     component: RainyIcon,
-    colors: { cloudColor: "#9CA3AF", dropColor: "#60A5FA" },
+    colors: { cloudColor: "#9CA3AF", dropColor: "#3BA8F6" },
   },
   "light rain_day": {
     component: RainyIcon,
-    colors: { cloudColor: "#9CA3AF", dropColor: "#60A5FA" },
+    colors: { cloudColor: "#9CA3AF", dropColor: "#3BA8F6" },
   },
   "moderate rain_day": {
     component: RainyIcon,
-    colors: { cloudColor: "#9CA3AF", dropColor: "#60A5FA" },
+    colors: { cloudColor: "#9CA3AF", dropColor: "#3BA8F6" },
   },
   "heavy rain_day": {
     component: RainyIcon,
-    colors: { cloudColor: "#9CA3AF", dropColor: "#60A5FA" },
+    colors: { cloudColor: "#9CA3AF", dropColor: "#3BA8F6" },
   },
   snow_day: {
     component: SnowyIcon,
@@ -162,7 +162,7 @@ const weatherIcons: {
   },
   thunder_day: {
     component: StormyIcon,
-    colors: { cloudColor: "#6B7280", lightningColor: "#FACC15" },
+    colors: { cloudColor: "#9CA3AF", lightningColor: "#FACC15" },
   },
 
   // Night conditions
@@ -172,47 +172,47 @@ const weatherIcons: {
   },
   "partly cloudy_night": {
     component: PartlyCloudyNightIcon,
-    colors: { moonColor: "#BFDBFE", cloudColor: "#6B7280" },
+    colors: { moonColor: "#BFDBFE", cloudColor: "#9CA3AF" },
   },
   cloudy_night: {
     component: CloudyIcon,
-    colors: { color: "#6B7280" },
+    colors: { color: "#9CA3AF" },
   },
   overcast_night: {
     component: CloudyIcon,
-    colors: { color: "#6B7280" },
+    colors: { color: "#9CA3AF" },
   },
   rain_night: {
     component: RainyIcon,
-    colors: { cloudColor: "#6B7280", dropColor: "#3B82F6" },
+    colors: { cloudColor: "#9CA3AF", dropColor: "#3BA8F6" },
   },
   drizzle_night: {
     component: RainyIcon,
-    colors: { cloudColor: "#6B7280", dropColor: "#3B82F6" },
+    colors: { cloudColor: "#9CA3AF", dropColor: "#3BA8F6" },
   },
   "light rain_night": {
     component: RainyIcon,
-    colors: { cloudColor: "#6B7280", dropColor: "#3B82F6" },
+    colors: { cloudColor: "#9CA3AF", dropColor: "#3BA8F6" },
   },
   "moderate rain_night": {
     component: RainyIcon,
-    colors: { cloudColor: "#6B7280", dropColor: "#3B82F6" },
+    colors: { cloudColor: "#9CA3AF", dropColor: "#3BA8F6" },
   },
   "heavy rain_night": {
     component: RainyIcon,
-    colors: { cloudColor: "#6B7280", dropColor: "#3B82F6" },
+    colors: { cloudColor: "#9CA3AF", dropColor: "#3BA8F6" },
   },
   snow_night: {
     component: SnowyIcon,
-    colors: { cloudColor: "#6B7280", snowflakeColor: "#E0F2F7" },
+    colors: { cloudColor: "#9CA3AF", snowflakeColor: "#E0F2F7" },
   },
   sleet_night: {
     component: SnowyIcon,
-    colors: { cloudColor: "#6B7280", snowflakeColor: "#E0F2F7" },
+    colors: { cloudColor: "#9CA3AF", snowflakeColor: "#E0F2F7" },
   },
   thunder_night: {
     component: StormyIcon,
-    colors: { cloudColor: "#4B5563", lightningColor: "#FACC15" },
+    colors: { cloudColor: "#9CA3AF", lightningColor: "#FACC15" },
   },
 };
 
@@ -279,7 +279,7 @@ const WeatherTips: React.FC<{
   const condition = weather.current.condition.text.toLowerCase();
   const isDay = weather.current.is_day === 1;
 
-  let tips: { icon: React.ReactNode; text: string }[] = [];
+  const tips: { icon: React.ReactNode; text: string }[] = [];
 
   // Temperature based tips
   if (
@@ -484,12 +484,13 @@ export default function Home() {
 
     if (isDay) {
       if (condition.includes("sunny") || condition.includes("clear")) {
-        return "from-blue-300 via-cyan-400 to-blue-500";
+        return "from-amber-600 via-sky-800 to-blue-600";
       } else if (
+        condition.includes("partly cloudy") ||
         condition.includes("cloud") ||
         condition.includes("overcast")
       ) {
-        return "from-slate-600 via-gray-700 to-gray-800";
+        return "from-slate-600 via-gray-600 to-gray-800";
       } else if (condition.includes("rain") || condition.includes("drizzle")) {
         return "from-blue-600 via-blue-700 to-blue-800";
       } else if (condition.includes("snow") || condition.includes("sleet")) {
@@ -530,7 +531,7 @@ export default function Home() {
     isDay: boolean,
     isLarge = false
   ) => {
-    const size = isLarge ? 80 : 24;
+    const size = isLarge ? 120 : 24;
     return (
       <AnimatedWeatherIcon condition={condition} isDay={isDay} size={size} />
     );
