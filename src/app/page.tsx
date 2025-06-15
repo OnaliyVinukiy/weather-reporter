@@ -18,16 +18,17 @@ import {
   ThermometerSnowflake,
 } from "lucide-react";
 
-// Import animated icon components
 import SunnyIcon from "./icons/SunnyIcon";
 import CloudyIcon from "./icons/CloudyIcon";
 import RainyIcon from "./icons/RainyIcon";
 import SnowyIcon from "./icons/SnowyIcon";
 import StormyIcon from "./icons/StormyIcon";
 import MoonIcon from "./icons/MoonIcon";
+import MistIcon from "./icons/MistyIcon";
 import PartlyCloudyDayIcon from "./icons/PartlyCloudyDayIcon";
 import PartlyCloudyNightIcon from "./icons/PartlyCloudyNightIcon";
 import RainyBackground from "./components/RainyBackground";
+import MistyBackground from "./components/MistyBackground";
 
 interface WeatherData {
   location?: {
@@ -99,6 +100,7 @@ const weatherIcons: {
       dropColor?: string;
       snowflakeColor?: string;
       lightningColor?: string;
+      mistColor?: string;
       color?: string;
     }>;
     colors: {
@@ -108,6 +110,7 @@ const weatherIcons: {
       dropColor?: string;
       snowflakeColor?: string;
       lightningColor?: string;
+      mistColor?: string;
       color?: string;
     };
   };
@@ -165,6 +168,14 @@ const weatherIcons: {
     component: StormyIcon,
     colors: { cloudColor: "#9CA3AF", lightningColor: "#FACC15" },
   },
+  mist_day: {
+    component: MistIcon,
+    colors: { cloudColor: "#9CA3AF", mistColor: "rgba(255, 255, 255, 0.7)" },
+  },
+  fog_day: {
+    component: MistIcon,
+    colors: { cloudColor: "#9CA3AF", mistColor: "rgba(255, 255, 255, 0.7)" },
+  },
 
   // Night conditions
   clear_night: {
@@ -215,6 +226,14 @@ const weatherIcons: {
     component: StormyIcon,
     colors: { cloudColor: "#9CA3AF", lightningColor: "#FACC15" },
   },
+  mist_night: {
+    component: MistIcon,
+    colors: { cloudColor: "#9CA3AF", mistColor: "rgba(200, 200, 200, 0.6)" },
+  },
+  fog_night: {
+    component: MistIcon,
+    colors: { cloudColor: "#9CA3AF", mistColor: "rgba(200, 200, 200, 0.6)" },
+  },
 };
 
 // Component to render animated weather icons
@@ -249,6 +268,11 @@ const AnimatedWeatherIcon: React.FC<{
     iconKey = isDay ? "snow_day" : "snow_night";
   } else if (normalizedCondition.includes("thunder")) {
     iconKey = isDay ? "thunder_day" : "thunder_night";
+  } else if (
+    normalizedCondition.includes("mist") ||
+    normalizedCondition.includes("fog")
+  ) {
+    iconKey = isDay ? "mist_day" : "mist_night";
   }
 
   const { component: IconComponent, colors } =
@@ -362,6 +386,16 @@ const WeatherTips: React.FC<{
       text: "Strong winds: secure loose outdoor items.",
     });
   }
+  if (condition.includes("mist") || condition.includes("fog")) {
+    tips.push({
+      icon: <Eye size={20} className="text-gray-300" />,
+      text: "Visibility is low; drive with caution and use fog lights.",
+    });
+    tips.push({
+      icon: <Wind size={20} className="text-gray-300" />,
+      text: "Mist can make surfaces damp and slippery.",
+    });
+  }
 
   // General tips
   if (tips.length === 0) {
@@ -400,6 +434,8 @@ export default function Home() {
   const [error, setError] = useState("");
   const [unit, setUnit] = useState<"C" | "F">("C");
   const [searchInput, setSearchInput] = useState("");
+  const [isRaining, setIsRaining] = useState(false);
+  const [isMisty, setIsMisty] = useState(false);
 
   // Fetch weather data from API
   const fetchWeather = async (city: string) => {
@@ -441,6 +477,21 @@ export default function Home() {
       const data = await response.json();
       setWeather(data);
       setLocation(data.location.name);
+
+      if (data.current?.condition?.text) {
+        const condition = data.current.condition.text.toLowerCase();
+        setIsRaining(false);
+        setIsMisty(false);
+
+        if (condition.includes("rain") || condition.includes("drizzle")) {
+          setIsRaining(true);
+        } else if (condition.includes("mist") || condition.includes("fog")) {
+          setIsMisty(true);
+        }
+      } else {
+        setIsRaining(false);
+        setIsMisty(false);
+      }
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "An unexpected error occurred";
@@ -499,7 +550,6 @@ export default function Home() {
       } else if (condition.includes("thunder")) {
         return "from-gray-700 via-gray-800 to-gray-900";
       }
-      return "from-sky-300 via-blue-400 to-indigo-500";
     } else {
       if (condition.includes("clear")) {
         return "from-indigo-800 via-purple-700 to-slate-800";
@@ -515,7 +565,6 @@ export default function Home() {
       } else if (condition.includes("thunder")) {
         return "from-gray-800 via-gray-900 to-black";
       }
-      return "from-slate-800 via-purple-800 to-black";
     }
   };
 
@@ -566,10 +615,6 @@ export default function Home() {
       ? (weather.current.feelslike_c * 9) / 5 + 32
       : null;
 
-  const isRaining =
-    weather?.current?.condition?.text?.toLowerCase().includes("rain") ||
-    weather?.current?.condition?.text?.toLowerCase().includes("drizzle");
-
   return (
     <div
       className={`min-h-screen bg-gradient-to-br ${getBackgroundGradient()} transition-all duration-1000 relative`}
@@ -581,6 +626,7 @@ export default function Home() {
           color="rgba(173, 216, 230, 0.7)"
         />
       )}
+      {isMisty && <MistyBackground />}
 
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-20 w-64 h-64 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
@@ -651,7 +697,7 @@ export default function Home() {
 
         {/* Main Weather Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-          {/* Current Weather - Large Card */}
+          {/* Current Weather */}
           <div className="lg:col-span-2">
             <div className="bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-8 h-full">
               <div className="flex items-center justify-between mb-6">
