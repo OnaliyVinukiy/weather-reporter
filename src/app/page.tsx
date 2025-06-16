@@ -16,6 +16,8 @@ import {
   CloudRain,
   ThermometerSun,
   ThermometerSnowflake,
+  Cloud,
+  Snowflake,
 } from "lucide-react";
 
 import SunnyIcon from "./icons/SunnyIcon";
@@ -48,6 +50,11 @@ interface WeatherData {
     vis_km: number;
     uv: number;
     feelslike_c: number;
+    dewpoint_c?: number;
+    dewpoint_f?: number;
+    cloud?: number;
+    gust_kph?: number;
+    gust_mph?: number;
     condition: {
       text: string;
       icon: string;
@@ -68,6 +75,8 @@ interface WeatherData {
           icon: string;
         };
         uv: number;
+        daily_chance_of_rain?: number;
+        daily_chance_of_snow?: number;
       };
       astro: {
         sunrise: string;
@@ -305,6 +314,9 @@ const WeatherTips: React.FC<{
   const uvIndex = weather.current.uv;
   const condition = weather.current.condition.text.toLowerCase();
   const isDay = weather.current.is_day === 1;
+  const windGust = weather.current.gust_kph;
+  const dewPoint =
+    unit === "C" ? weather.current.dewpoint_c : weather.current.dewpoint_f;
 
   const tips: { icon: React.ReactNode; text: string }[] = [];
 
@@ -382,7 +394,7 @@ const WeatherTips: React.FC<{
       text: "High humidity can make it feel hotter; stay cool.",
     });
   }
-  if (weather.current.wind_kph > 30) {
+  if (windGust && windGust > 30) {
     tips.push({
       icon: <Wind size={20} className="text-gray-300" />,
       text: "Strong winds: secure loose outdoor items.",
@@ -396,6 +408,21 @@ const WeatherTips: React.FC<{
     tips.push({
       icon: <Wind size={20} className="text-gray-300" />,
       text: "Mist can make surfaces damp and slippery.",
+    });
+  }
+  if (
+    dewPoint &&
+    ((unit === "C" && dewPoint > 18) || (unit === "F" && dewPoint > 64))
+  ) {
+    tips.push({
+      icon: <Droplets size={20} className="text-blue-200" />,
+      text: "High dew point: Expect muggy conditions.",
+    });
+  }
+  if (weather.current.cloud && weather.current.cloud > 80) {
+    tips.push({
+      icon: <Cloud size={20} className="text-gray-300" />,
+      text: "Heavy cloud cover, might feel a bit darker than usual.",
     });
   }
 
@@ -449,7 +476,6 @@ export default function Home() {
       if (!API_KEY) {
         throw new Error("Weather API Key is not configured.");
       }
-
       const response = await fetch(
         `https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${encodeURIComponent(
           city
@@ -585,6 +611,7 @@ export default function Home() {
         return "from-gray-800 via-gray-900 to-black";
       }
     }
+    return "from-indigo-900 via-gray-800 to-slate-900";
   };
 
   const formatDate = (dateString: string) => {
@@ -621,6 +648,8 @@ export default function Home() {
         condition: hour.condition.text,
         icon: hour.condition.icon,
         precipitation: hour.precip_mm,
+        humidity: hour.humidity,
+        wind: hour.wind_kph,
         isDay: hour.is_day === 1,
       }));
   };
@@ -633,6 +662,11 @@ export default function Home() {
       : weather?.current?.feelslike_c
       ? (weather.current.feelslike_c * 9) / 5 + 32
       : null;
+
+  const dewPoint =
+    unit === "C" ? weather?.current?.dewpoint_c : weather?.current?.dewpoint_f;
+  const gustSpeed =
+    unit === "C" ? weather?.current?.gust_kph : weather?.current?.gust_mph;
 
   return (
     <div
@@ -848,6 +882,37 @@ export default function Home() {
                         {weather?.current?.pressure_mb || "--"} mb
                       </div>
                     </div>
+
+                    {/* Dew Point */}
+                    <div className="bg-white/10 rounded-2xl p-4 text-center">
+                      <Droplets
+                        className="mx-auto mb-2 text-blue-300"
+                        size={24}
+                      />
+                      <div className="text-white/60 text-sm">Dew Point</div>
+                      <div className="text-white font-semibold">
+                        {dewPoint ? Math.round(dewPoint) : "--"}°{unit}
+                      </div>
+                    </div>
+
+                    {/* Cloud Cover */}
+                    <div className="bg-white/10 rounded-2xl p-4 text-center">
+                      <Cloud className="mx-auto mb-2 text-white/80" size={24} />
+                      <div className="text-white/60 text-sm">Cloud Cover</div>
+                      <div className="text-white font-semibold">
+                        {weather?.current?.cloud || "--"}%
+                      </div>
+                    </div>
+
+                    {/* Gust Speed */}
+                    <div className="bg-white/10 rounded-2xl p-4 text-center">
+                      <Wind className="mx-auto mb-2 text-gray-400" size={24} />
+                      <div className="text-white/60 text-sm">Wind Gust</div>
+                      <div className="text-white font-semibold">
+                        {gustSpeed ? Math.round(gustSpeed) : "--"}{" "}
+                        {unit === "C" ? "km/h" : "mph"}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -954,6 +1019,16 @@ export default function Home() {
                         {hour.precipitation.toFixed(1)}mm
                       </div>
                     )}
+                    {/* Hourly Humidity */}
+                    <div className="flex items-center text-cyan-400 text-xs mt-1">
+                      <Droplets size={12} className="mr-1" />
+                      {hour.humidity}%
+                    </div>
+                    {/* Hourly Wind */}
+                    <div className="flex items-center text-gray-300 text-xs mt-1">
+                      <Wind size={12} className="mr-1" />
+                      {Math.round(hour.wind)}km/h
+                    </div>
                   </div>
                 ))}
               </div>
@@ -999,6 +1074,29 @@ export default function Home() {
                       <Wind size={12} className="mr-1" />
                       {Math.round(day.day.maxwind_kph)}km/h
                     </div>
+                    {/* Daily Chance of Rain */}
+                    {day.day.daily_chance_of_rain !== undefined &&
+                      day.day.daily_chance_of_rain > 0 && (
+                        <div className="flex items-center text-blue-400 text-xs mt-1">
+                          <Droplets size={12} className="mr-1" />
+                          {day.day.daily_chance_of_rain}% Rain
+                        </div>
+                      )}
+                    {/* Daily Chance of Snow */}
+                    {day.day.daily_chance_of_snow !== undefined &&
+                      day.day.daily_chance_of_snow > 0 && (
+                        <div className="flex items-center text-blue-200 text-xs mt-1">
+                          <Snowflake size={12} className="mr-1" />
+                          {day.day.daily_chance_of_snow}% Snow
+                        </div>
+                      )}
+                    {/* Daily Average Humidity */}
+                    {day.day.avghumidity !== undefined && (
+                      <div className="flex items-center text-cyan-400 text-xs mt-1">
+                        <Droplets size={12} className="mr-1" />
+                        {Math.round(day.day.avghumidity)}% Humidity
+                      </div>
+                    )}
                   </div>
                 )) ||
                   Array.from({ length: 7 }).map((_, i) => (
