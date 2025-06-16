@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Cloud, Sun, Droplet, CloudSnow, CloudRain, Zap } from "lucide-react";
+import { Cloud, Sun, Droplet, CloudSnow, Zap } from "lucide-react";
 
 const Logo: React.FC<{ size?: number }> = ({ size = 80 }) => {
   return (
