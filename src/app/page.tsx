@@ -530,6 +530,23 @@ export default function Home() {
     fetchWeather("Colombo");
   }, []);
 
+  useEffect(() => {
+    if (!weather?.location?.localtime) return;
+    const interval = setInterval(() => {
+      setWeather((prev) => ({ ...prev! }));
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [weather?.location?.localtime]);
+
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
   const getBackgroundGradient = () => {
     if (!weather?.current) return "from-indigo-900 via-gray-800 to-slate-900";
 
@@ -546,9 +563,9 @@ export default function Home() {
       ) {
         return "from-slate-600 via-gray-600 to-gray-800";
       } else if (condition.includes("rain") || condition.includes("drizzle")) {
-        return "from-blue-600 via-blue-700 to-blue-800";
+        return "from-slate-800 via-blue-900 to-black";
       } else if (condition.includes("snow") || condition.includes("sleet")) {
-        return "from-blue-200 via-blue-300 to-blue-400";
+        return "from-blue-700 via-blue-800 to-blue-900";
       } else if (condition.includes("thunder")) {
         return "from-gray-700 via-gray-800 to-gray-900";
       }
@@ -713,8 +730,17 @@ export default function Home() {
                         </span>
                       </div>
                       <div className="text-white/60">
-                        {weather?.location?.localtime &&
-                          formatDate(weather.location.localtime)}
+                        {weather?.location?.localtime && (
+                          <>
+                            <span>
+                              {formatDate(weather.location.localtime)}
+                            </span>
+                            <span className="mx-2">•</span>
+                            <span>
+                              {formatTime(weather.location.localtime)}
+                            </span>
+                          </>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
