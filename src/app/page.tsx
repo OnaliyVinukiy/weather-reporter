@@ -19,233 +19,14 @@ import {
   Cloud,
   Snowflake,
 } from "lucide-react";
-
-import SunnyIcon from "./icons/SunnyIcon";
-import CloudyIcon from "./icons/CloudyIcon";
-import RainyIcon from "./icons/RainyIcon";
 import SnowyIcon from "./icons/SnowyIcon";
-import StormyIcon from "./icons/StormyIcon";
-import MoonIcon from "./icons/MoonIcon";
-import MistIcon from "./icons/MistyIcon";
-import PartlyCloudyDayIcon from "./icons/PartlyCloudyDayIcon";
-import PartlyCloudyNightIcon from "./icons/PartlyCloudyNightIcon";
 import RainyBackground from "./components/RainyBackground";
 import MistyBackground from "./components/MistyBackground";
 import Logo from "./components/Logo";
 import Loader from "./components/Loader";
-
-interface WeatherData {
-  location?: {
-    name: string;
-    country: string;
-    localtime: string;
-  };
-  current?: {
-    temp_c: number;
-    temp_f: number;
-    humidity: number;
-    wind_kph: number;
-    wind_dir: string;
-    pressure_mb: number;
-    vis_km: number;
-    uv: number;
-    feelslike_c: number;
-    dewpoint_c?: number;
-    dewpoint_f?: number;
-    cloud?: number;
-    gust_kph?: number;
-    gust_mph?: number;
-    condition: {
-      text: string;
-      icon: string;
-    };
-    is_day: number;
-  };
-  forecast?: {
-    forecastday?: Array<{
-      date: string;
-      day: {
-        maxtemp_c: number;
-        mintemp_c: number;
-        avghumidity: number;
-        maxwind_kph: number;
-        totalprecip_mm: number;
-        condition: {
-          text: string;
-          icon: string;
-        };
-        uv: number;
-        daily_chance_of_rain?: number;
-        daily_chance_of_snow?: number;
-      };
-      astro: {
-        sunrise: string;
-        sunset: string;
-        moon_phase: string;
-      };
-      hour: Array<{
-        time: string;
-        temp_c: number;
-        condition: {
-          text: string;
-          icon: string;
-        };
-        precip_mm: number;
-        humidity: number;
-        wind_kph: number;
-        is_day: number;
-      }>;
-    }>;
-  };
-}
-
-// Map weather conditions to animated icons and colors
-const weatherIcons: {
-  [key: string]: {
-    component: React.FC<{
-      size?: number;
-      isDay?: boolean;
-      sunColor?: string;
-      moonColor?: string;
-      cloudColor?: string;
-      dropColor?: string;
-      snowflakeColor?: string;
-      lightningColor?: string;
-      mistColor?: string;
-      color?: string;
-    }>;
-    colors: {
-      sunColor?: string;
-      moonColor?: string;
-      cloudColor?: string;
-      dropColor?: string;
-      snowflakeColor?: string;
-      lightningColor?: string;
-      mistColor?: string;
-      color?: string;
-    };
-  };
-} = {
-  // Day conditions
-  sunny: {
-    component: SunnyIcon,
-    colors: { color: "#FCD34D" },
-  },
-  clear: {
-    component: SunnyIcon,
-    colors: { color: "#FCD34D" },
-  },
-  "partly cloudy_day": {
-    component: PartlyCloudyDayIcon,
-    colors: { sunColor: "#FCD34D", cloudColor: "#9CA3AF" },
-  },
-  cloudy_day: {
-    component: CloudyIcon,
-    colors: { color: "#9CA3AF" },
-  },
-  overcast_day: {
-    component: CloudyIcon,
-    colors: { color: "#9CA3AF" },
-  },
-  rain_day: {
-    component: RainyIcon,
-    colors: { cloudColor: "#9CA3AF", dropColor: "#3BA8F6" },
-  },
-  drizzle_day: {
-    component: RainyIcon,
-    colors: { cloudColor: "#9CA3AF", dropColor: "#3BA8F6" },
-  },
-  "light rain_day": {
-    component: RainyIcon,
-    colors: { cloudColor: "#9CA3AF", dropColor: "#3BA8F6" },
-  },
-  "moderate rain_day": {
-    component: RainyIcon,
-    colors: { cloudColor: "#9CA3AF", dropColor: "#3BA8F6" },
-  },
-  "heavy rain_day": {
-    component: RainyIcon,
-    colors: { cloudColor: "#9CA3AF", dropColor: "#3BA8F6" },
-  },
-  snow_day: {
-    component: SnowyIcon,
-    colors: { cloudColor: "#9CA3AF", snowflakeColor: "#E0F2F7" },
-  },
-  sleet_day: {
-    component: SnowyIcon,
-    colors: { cloudColor: "#9CA3AF", snowflakeColor: "#E0F2F7" },
-  },
-  thunder_day: {
-    component: StormyIcon,
-    colors: { cloudColor: "#9CA3AF", lightningColor: "#FACC15" },
-  },
-  mist_day: {
-    component: MistIcon,
-    colors: { cloudColor: "#9CA3AF", mistColor: "rgba(255, 255, 255, 0.7)" },
-  },
-  fog_day: {
-    component: MistIcon,
-    colors: { cloudColor: "#9CA3AF", mistColor: "rgba(255, 255, 255, 0.7)" },
-  },
-
-  // Night conditions
-  clear_night: {
-    component: MoonIcon,
-    colors: { color: "#BFDBFE" },
-  },
-  "partly cloudy_night": {
-    component: PartlyCloudyNightIcon,
-    colors: { moonColor: "#BFDBFE", cloudColor: "#9CA3AF" },
-  },
-  cloudy_night: {
-    component: CloudyIcon,
-    colors: { color: "#9CA3AF" },
-  },
-  overcast_night: {
-    component: CloudyIcon,
-    colors: { color: "#9CA3AF" },
-  },
-  rain_night: {
-    component: RainyIcon,
-    colors: { cloudColor: "#9CA3AF", dropColor: "#3BA8F6" },
-  },
-  drizzle_night: {
-    component: RainyIcon,
-    colors: { cloudColor: "#9CA3AF", dropColor: "#3BA8F6" },
-  },
-  "light rain_night": {
-    component: RainyIcon,
-    colors: { cloudColor: "#9CA3AF", dropColor: "#3BA8F6" },
-  },
-  "moderate rain_night": {
-    component: RainyIcon,
-    colors: { cloudColor: "#9CA3AF", dropColor: "#3BA8F6" },
-  },
-  "heavy rain_night": {
-    component: RainyIcon,
-    colors: { cloudColor: "#9CA3AF", dropColor: "#3BA8F6" },
-  },
-  snow_night: {
-    component: SnowyIcon,
-    colors: { cloudColor: "#9CA3AF", snowflakeColor: "#E0F2F7" },
-  },
-  sleet_night: {
-    component: SnowyIcon,
-    colors: { cloudColor: "#9CA3AF", snowflakeColor: "#E0F2F7" },
-  },
-  thunder_night: {
-    component: StormyIcon,
-    colors: { cloudColor: "#9CA3AF", lightningColor: "#FACC15" },
-  },
-  mist_night: {
-    component: MistIcon,
-    colors: { cloudColor: "#9CA3AF", mistColor: "rgba(200, 200, 200, 0.6)" },
-  },
-  fog_night: {
-    component: MistIcon,
-    colors: { cloudColor: "#9CA3AF", mistColor: "rgba(200, 200, 200, 0.6)" },
-  },
-};
+import { WeatherData } from "./interfaces/weather";
+import { formatDate, formatTime } from "./lib/utils";
+import { weatherIcons } from "./lib/weatherHelper";
 
 // Component to render animated weather icons
 const AnimatedWeatherIcon: React.FC<{
@@ -565,14 +346,6 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [weather?.location?.localtime]);
 
-  const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
-
   const getBackgroundGradient = () => {
     if (!weather?.current) return "from-indigo-900 via-gray-800 to-slate-900";
 
@@ -612,14 +385,6 @@ export default function Home() {
       }
     }
     return "from-indigo-900 via-gray-800 to-slate-900";
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-    });
   };
 
   const getWeatherIcon = (
